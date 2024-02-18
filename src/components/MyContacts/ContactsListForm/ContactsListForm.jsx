@@ -1,61 +1,61 @@
-import { useState, useMemo } from 'react';
 import { nanoid } from 'nanoid';
+import { UseDispatch, useDispatch, useSelector } from 'react-redux';
+import { addContact } from '../../../redux/contacts/contacts-slice';
+import { getFilteredContacts } from '../../../redux/selectors';
 
 import styles from './contacts-list-form.module.css';
 
-const INITIAL_STATE = {
-  name: '',
-  number: '',
-};
-
-const ContactListForm = ({ onSubmit }) => {
-  const [state, setState] = useState({ ...INITIAL_STATE });
-
-  const handleChange = ({ target }) => {
-    const { name, value } = target;
-    setState({
-      ...state,
-      [name]: value,
-    });
-  };
+const ContactListForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(getFilteredContacts);
 
   const handleSubmit = e => {
     e.preventDefault();
-    onSubmit({ ...state });
-    setState({ ...INITIAL_STATE });
+
+    const phonebookName = e.target.elements.name;
+    const phonebookNumber = e.target.elements.number;
+
+    const normalizedName = phonebookName.value.toLowerCase();
+    const isDublicate = contacts.some(
+      contact => contact.name.toLowerCase() === normalizedName
+    );
+
+    if (isDublicate) {
+      alert(`${phonebookName.value} is already in contacts`);
+      e.target.reset();
+    } else {
+      dispatch(
+        addContact({
+          id: nanoid(),
+          name: phonebookName.value,
+          number: phonebookNumber.value,
+        })
+      );
+      e.target.reset();
+    }
   };
-
-  const phonebookNameId = useMemo(() => nanoid(), []);
-  const phonebookNumberId = useMemo(() => nanoid(), []);
-
-  const { name, number } = state;
 
   return (
     <>
       <h2>Phonebook</h2>
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formContainer}>
-          <label htmlFor={phonebookNameId}>Name</label>
+          <label htmlFor="phonebookName">Name</label>
           <input
-            value={name}
-            required
+            type="text"
             name="name"
-            onChange={handleChange}
-            className={styles.phonebookInput}
-            id={phonebookNameId}
+            required
             placeholder="Enter a name"
+            className={styles.phonebookInput}
           />
         </div>
         <div className={styles.formContainer}>
-          <label htmlFor={phonebookNumberId}>Number</label>
+          <label htmlFor="phonebookNumber">Number</label>
           <input
             type="tel"
-            value={number}
-            required
             name="number"
-            onChange={handleChange}
+            required
             className={styles.phonebookInput}
-            id={phonebookNumberId}
             placeholder="Enter the number"
           />
         </div>
